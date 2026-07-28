@@ -1,4 +1,4 @@
-// backend/routes/interviewRoutes.js
+
 
 const express = require("express");
 const router = express.Router();
@@ -6,9 +6,7 @@ const multer = require("multer");
 const path = require("path");
 const { protect } = require("../middleware/authMiddleware");
 
-// ============================================================
-// ✅ Import ALL controllers correctly
-// ============================================================
+
 
 const {
   saveInterviewResult,
@@ -19,9 +17,7 @@ const {
   generateFeedback
 } = require("../controllers/interviewController");
 
-// ============================================================
-// Configure multer for video uploads
-// ============================================================
+
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -48,11 +44,7 @@ const upload = multer({
   }
 });
 
-// ============================================================
-// ✅ Routes - Each handler must be a valid function
-// ============================================================
 
-// Process answer with video analysis
 router.post(
   "/process-answer",
   protect,

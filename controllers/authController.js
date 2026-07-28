@@ -165,7 +165,7 @@ exports.updateProfile = async (req, res) => {
       role: user.role
     });
   } catch (error) {
-    console.error("❌ UPDATE PROFILE ERROR:", error);
+    console.error(" UPDATE PROFILE ERROR:", error);
     res.status(500).json({
       message: "Server error"
     });
@@ -177,7 +177,7 @@ exports.updateProfile = async (req, res) => {
 // ============================================================
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
-  console.log("📝 Forgot password request for email:", email);
+  console.log(" Forgot password request for email:", email);
 
   try {
     if (!email) {
@@ -206,7 +206,7 @@ exports.forgotPassword = async (req, res) => {
 
     // Create reset URL
     const frontendResetUrl = `http://localhost:5173/reset-password/${resetToken}`;
-    console.log(`🔗 RESET LINK FOR TESTING: ${frontendResetUrl}`);
+    console.log(` RESET LINK FOR TESTING: ${frontendResetUrl}`);
 
     res.status(200).json({
       success: true,
@@ -215,7 +215,7 @@ exports.forgotPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ FORGOT PASSWORD ERROR:", error);
+    console.error(" FORGOT PASSWORD ERROR:", error);
     res.status(500).json({
       message: "Server error",
       error: error.message
@@ -229,7 +229,7 @@ exports.forgotPassword = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
-  console.log("📝 Reset password request with token:", token);
+  console.log(" Reset password request with token:", token);
 
   try {
     if (!password) {
@@ -270,7 +270,7 @@ exports.resetPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ RESET PASSWORD ERROR:", error);
+    console.error(" RESET PASSWORD ERROR:", error);
     res.status(500).json({
       message: "Server error",
       error: error.message

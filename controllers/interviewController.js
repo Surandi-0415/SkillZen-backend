@@ -36,7 +36,7 @@ exports.saveInterviewResult = async (req, res) => {
     res.status(201).json(result);
 
   } catch (error) {
-    console.error("❌ SAVE INTERVIEW ERROR:", error);
+    console.error(" SAVE INTERVIEW ERROR:", error);
     res.status(500).json({
       message: "Server error",
       error: error.message
@@ -75,7 +75,7 @@ exports.getInterviewHistory = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ GET HISTORY ERROR:", error);
+    console.error(" GET HISTORY ERROR:", error);
     res.status(500).json({
       message: "Server error"
     });
@@ -108,7 +108,7 @@ exports.getInterviewById = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ GET INTERVIEW ERROR:", error);
+    console.error(" GET INTERVIEW ERROR:", error);
     res.status(500).json({
       message: "Server error"
     });
@@ -186,7 +186,7 @@ const generateRecommendations = (facialLevel, speechEmotion, consistency, score)
 // ============================================================
 
 exports.processAnswer = async (req, res) => {
-  console.log("📝 processAnswer called");
+  console.log(" processAnswer called");
   console.log("Body:", req.body);
   console.log("File:", req.file);
 
@@ -202,7 +202,7 @@ exports.processAnswer = async (req, res) => {
     }
 
     // Call Python backend to perform video analysis using fetch and FormData
-    console.log(`📤 Sending video for model evaluation to Python backend at: ${PYTHON_API}/submit-answer`);
+    console.log(` Sending video for model evaluation to Python backend at: ${PYTHON_API}/submit-answer`);
     const formData = new FormData();
     formData.append('jd', jd);
     formData.append('question', question);
@@ -351,7 +351,7 @@ exports.processAnswer = async (req, res) => {
       recommendations: answerEntry.recommendations
     });
   } catch (error) {
-    console.error("❌ PROCESS ANSWER ERROR:", error);
+    console.error(" PROCESS ANSWER ERROR:", error);
     res.status(500).json({
       message: "Server error",
       error: error.message
@@ -360,7 +360,7 @@ exports.processAnswer = async (req, res) => {
     if (videoFile && fs.existsSync(videoFile.path)) {
       try {
         fs.unlinkSync(videoFile.path);
-        console.log(`🧹 Cleaned up Node temp file: ${videoFile.path}`);
+        console.log(` Cleaned up Node temp file: ${videoFile.path}`);
       } catch (err) {
         console.error(`Failed to clean up temp file: ${err.message}`);
       }
@@ -408,7 +408,7 @@ exports.getInterviewAnalytics = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ ANALYTICS ERROR:", error);
+    console.error(" ANALYTICS ERROR:", error);
     res.status(500).json({
       message: "Server error"
     });
@@ -440,7 +440,7 @@ exports.generateFeedback = async (req, res) => {
       explanation: ans.explanation
     }));
 
-    console.log(`📤 Sending generate-feedback request to Python backend for interview: ${interviewId}`);
+    console.log(` Sending generate-feedback request to Python backend for interview: ${interviewId}`);
     
     const pythonResponse = await fetch(`${PYTHON_API}/generate-feedback`, {
       method: "POST",
@@ -470,7 +470,7 @@ exports.generateFeedback = async (req, res) => {
     });
     
   } catch (error) {
-    console.error("❌ FEEDBACK ERROR:", error);
+    console.error(" FEEDBACK ERROR:", error);
     res.status(500).json({
       message: "Server error",
       error: error.message
