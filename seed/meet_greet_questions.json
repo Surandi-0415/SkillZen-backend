@@ -1,0 +1,62 @@
+[
+  {
+    "question": "To get us started, please give a brief introduction about yourself.",
+    "category": "intro",
+    "order": 10,
+    "active": true
+  },
+  {
+    "question": "Can you walk me through your background and what led you to apply for this role?",
+    "category": "intro",
+    "order": 9,
+    "active": true
+  },
+  {
+    "question": "How are you feeling today, and what are you hoping to get out of this interview?",
+    "category": "icebreaker",
+    "order": 8,
+    "active": true
+  },
+  {
+    "question": "What are you most passionate about in your professional life?",
+    "category": "motivation",
+    "order": 7,
+    "active": true
+  },
+  {
+    "question": "How would your friends or colleagues describe you in a few words?",
+    "category": "personality",
+    "order": 6,
+    "active": true
+  },
+  {
+    "question": "What made you interested in this position and our company?",
+    "category": "motivation",
+    "order": 5,
+    "active": true
+  },
+  {
+    "question": "Tell me about something you have accomplished recently that you are proud of.",
+    "category": "achievement",
+    "order": 4,
+    "active": true
+  },
+  {
+    "question": "What do you like to do outside of work to relax or recharge?",
+    "category": "icebreaker",
+    "order": 3,
+    "active": true
+  },
+  {
+    "question": "How do you usually prepare before an important meeting or interview?",
+    "category": "personality",
+    "order": 2,
+    "active": true
+  },
+  {
+    "question": "Where do you see yourself growing over the next few years?",
+    "category": "motivation",
+    "order": 1,
+    "active": true
+  }
+]

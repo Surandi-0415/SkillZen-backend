@@ -1,4 +1,4 @@
-// backend/routes/interviewRoutes.js
+
 
 const express = require("express");
 const router = express.Router();
@@ -6,9 +6,7 @@ const multer = require("multer");
 const path = require("path");
 const { protect } = require("../middleware/authMiddleware");
 
-// ============================================================
-// ✅ Import ALL controllers correctly
-// ============================================================
+
 
 const {
   saveInterviewResult,
@@ -16,12 +14,11 @@ const {
   getInterviewById,
   processAnswer,
   getInterviewAnalytics,
-  generateFeedback
+  generateFeedback,
+  getMeetGreetQuestions
 } = require("../controllers/interviewController");
 
-// ============================================================
-// Configure multer for video uploads
-// ============================================================
+
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -48,16 +45,20 @@ const upload = multer({
   }
 });
 
-// ============================================================
-// ✅ Routes - Each handler must be a valid function
-// ============================================================
 
-// Process answer with video analysis
 router.post(
   "/process-answer",
   protect,
   upload.single('video'),
   processAnswer
+);
+
+// Get random meet & greet (warm-up) questions.
+// Public reference data (no user context needed) so the interview can start
+// instantly. Declared before "/:id" so it is not swallowed by that param route.
+router.get(
+  "/meet-greet",
+  getMeetGreetQuestions
 );
 
 // Save interview result

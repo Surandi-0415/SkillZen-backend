@@ -1,10 +1,51 @@
 // backend/controllers/interviewController.js
 
 const InterviewResult = require("../models/InterviewResult");
+const MeetGreetQuestion = require("../models/MeetGreetQuestion");
 const fs = require("fs");
 const path = require("path");
 
 const PYTHON_API = process.env.PYTHON_API_URL || "http://localhost:8000";
+
+// ============================================================
+// GET MEET & GREET (WARM-UP) QUESTIONS
+// ============================================================
+// Returns a small set of pre-built warm-up questions, chosen at random,
+// so the candidate can start answering instantly while the AI generates the
+// real, job-specific questions in the background.
+
+exports.getMeetGreetQuestions = async (req, res) => {
+  try {
+    // How many warm-up questions to show. Defaults to 3, capped at 10.
+    const requested = parseInt(req.query.count, 10);
+    const count = Math.min(
+      Number.isNaN(requested) || requested < 1 ? 3 : requested,
+      10
+    );
+
+    // Randomly pick `count` active questions using an aggregation $sample.
+    const questions = await MeetGreetQuestion.aggregate([
+      { $match: { active: true } },
+      { $sample: { size: count } }
+    ]);
+
+    // Return just the question strings (what the interview UI consumes),
+    // plus the raw docs in case the client wants metadata.
+    res.json({
+      success: true,
+      total: questions.length,
+      questions: questions.map((q) => q.question),
+      items: questions
+    });
+  } catch (error) {
+    console.error(" GET MEET & GREET ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
+  }
+};
 
 // ============================================================
 // SAVE INTERVIEW RESULT
@@ -36,7 +77,7 @@ exports.saveInterviewResult = async (req, res) => {
     res.status(201).json(result);
 
   } catch (error) {
-    console.error("❌ SAVE INTERVIEW ERROR:", error);
+    console.error(" SAVE INTERVIEW ERROR:", error);
     res.status(500).json({
       message: "Server error",
       error: error.message
@@ -75,7 +116,7 @@ exports.getInterviewHistory = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ GET HISTORY ERROR:", error);
+    console.error(" GET HISTORY ERROR:", error);
     res.status(500).json({
       message: "Server error"
     });
@@ -108,7 +149,7 @@ exports.getInterviewById = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ GET INTERVIEW ERROR:", error);
+    console.error(" GET INTERVIEW ERROR:", error);
     res.status(500).json({
       message: "Server error"
     });
@@ -186,7 +227,7 @@ const generateRecommendations = (facialLevel, speechEmotion, consistency, score)
 // ============================================================
 
 exports.processAnswer = async (req, res) => {
-  console.log("📝 processAnswer called");
+  console.log(" processAnswer called");
   console.log("Body:", req.body);
   console.log("File:", req.file);
 
@@ -202,7 +243,7 @@ exports.processAnswer = async (req, res) => {
     }
 
     // Call Python backend to perform video analysis using fetch and FormData
-    console.log(`📤 Sending video for model evaluation to Python backend at: ${PYTHON_API}/submit-answer`);
+    console.log(` Sending video for model evaluation to Python backend at: ${PYTHON_API}/submit-answer`);
     const formData = new FormData();
     formData.append('jd', jd);
     formData.append('question', question);
@@ -265,25 +306,14 @@ exports.processAnswer = async (req, res) => {
     const consistency = calculateConsistency(facialLevel, speechEmotion);
     const recommendations = generateRecommendations(facialLevel, speechEmotion, consistency, combinedConfidence);
 
-    // Create interview result if it doesn't exist
-    let interviewResult = await InterviewResult.findOne({
-      user: req.user._id,
-      jobDescription: jd,
-      status: { $in: ["pending", "processing"] }
-    });
-
-    if (!interviewResult) {
-      interviewResult = await InterviewResult.create({
-        user: req.user._id,
-        jobDescription: jd,
-        jobTitle: jobTitle || "Interview",
-        company: company || "",
-        status: "processing",
-        answers: []
-      });
-    }
-
-    // Create answer entry with actual analysis results
+    // NOTE: This endpoint is intentionally STATELESS — it only performs the
+    // per-answer analysis and returns it. It does NOT write to MongoDB.
+    //
+    // Why: the frontend now submits answers asynchronously and CONCURRENTLY
+    // (the candidate advances immediately while analysis runs in the
+    // background). A per-answer read-modify-write on a shared InterviewResult
+    // document would race and corrupt data. The complete interview is persisted
+    // exactly once at the end via POST /api/interviews/save, so no data is lost.
     const answerEntry = {
       question: question,
       answer: transcript,
@@ -300,46 +330,9 @@ exports.processAnswer = async (req, res) => {
       timestamp: new Date()
     };
 
-    interviewResult.answers.push(answerEntry);
-
-    // Calculate overall interview metrics
-    const answersCount = interviewResult.answers.length;
-    const totalScore = interviewResult.answers.reduce((sum, ans) => sum + (ans.content_score || 0), 0);
-    const avgScore = totalScore / answersCount;
-    
-    const avgConfidenceScore = interviewResult.answers.reduce((sum, ans) => sum + (ans.combined_confidence || 0), 0) / answersCount;
-    const getOverallConfidenceLevelStr = (score) => {
-      if (score >= 0.90) return "Excellent";
-      if (score >= 0.75) return "High";
-      if (score >= 0.60) return "Moderate";
-      if (score >= 0.40) return "Fair";
-      return "Low";
-    };
-    const overallConfidenceLevel = getOverallConfidenceLevelStr(avgConfidenceScore);
-    const allUniqueRecs = Array.from(new Set(
-      interviewResult.answers.flatMap(ans => ans.recommendations || [])
-    )).slice(0, 5);
-
-    interviewResult.overallScore = parseFloat(avgScore.toFixed(1));
-    interviewResult.contentScore = parseFloat(avgScore.toFixed(2));
-    interviewResult.confidenceScore = parseFloat(avgConfidenceScore.toFixed(2));
-    
-    interviewResult.overallAnalysis = {
-      combined_confidence_score: parseFloat(avgConfidenceScore.toFixed(3)),
-      overall_confidence_level: overallConfidenceLevel,
-      overall_emotion: speechEmotion,
-      behaviour_consistency: consistency,
-      recommendations: allUniqueRecs,
-      performance_summary: `Candidate completed ${answersCount} questions with an average score of ${avgScore.toFixed(1)}/10 and ${overallConfidenceLevel.toLowerCase()} confidence.`
-    };
-
-    interviewResult.status = "completed";
-    await interviewResult.save();
-
     // Return the response structured to match the React frontend destructured properties exactly
     res.status(200).json({
       success: true,
-      interview: interviewResult,
       transcript: answerEntry.transcript,
       content_score: answerEntry.content_score,
       explanation: answerEntry.explanation,
@@ -351,7 +344,7 @@ exports.processAnswer = async (req, res) => {
       recommendations: answerEntry.recommendations
     });
   } catch (error) {
-    console.error("❌ PROCESS ANSWER ERROR:", error);
+    console.error(" PROCESS ANSWER ERROR:", error);
     res.status(500).json({
       message: "Server error",
       error: error.message
@@ -360,7 +353,7 @@ exports.processAnswer = async (req, res) => {
     if (videoFile && fs.existsSync(videoFile.path)) {
       try {
         fs.unlinkSync(videoFile.path);
-        console.log(`🧹 Cleaned up Node temp file: ${videoFile.path}`);
+        console.log(` Cleaned up Node temp file: ${videoFile.path}`);
       } catch (err) {
         console.error(`Failed to clean up temp file: ${err.message}`);
       }
@@ -408,7 +401,7 @@ exports.getInterviewAnalytics = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ ANALYTICS ERROR:", error);
+    console.error(" ANALYTICS ERROR:", error);
     res.status(500).json({
       message: "Server error"
     });
@@ -440,7 +433,7 @@ exports.generateFeedback = async (req, res) => {
       explanation: ans.explanation
     }));
 
-    console.log(`📤 Sending generate-feedback request to Python backend for interview: ${interviewId}`);
+    console.log(` Sending generate-feedback request to Python backend for interview: ${interviewId}`);
     
     const pythonResponse = await fetch(`${PYTHON_API}/generate-feedback`, {
       method: "POST",
@@ -470,7 +463,7 @@ exports.generateFeedback = async (req, res) => {
     });
     
   } catch (error) {
-    console.error("❌ FEEDBACK ERROR:", error);
+    console.error(" FEEDBACK ERROR:", error);
     res.status(500).json({
       message: "Server error",
       error: error.message
