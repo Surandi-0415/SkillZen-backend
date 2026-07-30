@@ -450,7 +450,11 @@ exports.generateFeedback = async (req, res) => {
       },
       body: JSON.stringify({
         jd: interview.jobDescription,
-        qa_list: qaList
+        qa_list: qaList,
+        // Header details for the feedback report (candidate / position / company).
+        candidate: req.user?.name || "",
+        position: interview.jobTitle || "",
+        company: interview.company || ""
       })
     });
 
