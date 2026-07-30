@@ -424,13 +424,21 @@ exports.generateFeedback = async (req, res) => {
       });
     }
     
-    // Call Python backend to generate feedback report
+    // Call Python backend to generate feedback report.
+    // Forward the full per-answer analysis (content + facial + speech) so the
+    // Python side can build the four-section report (answer / facial / speech /
+    // combined overall). Previously facial_analysis and speech_analysis were
+    // dropped here, which left the facial and speech sections with no data.
     const qaList = interview.answers.map(ans => ({
       question: ans.question,
       answer: ans.answer || ans.transcript || '',
       content_score: ans.content_score,
       confidence: ans.confidence,
-      explanation: ans.explanation
+      explanation: ans.explanation,
+      facial_analysis: ans.facial_analysis || {},
+      speech_analysis: ans.speech_analysis || {},
+      combined_confidence: ans.combined_confidence || 0,
+      overall_emotion: ans.overall_emotion || 'unknown'
     }));
 
     console.log(` Sending generate-feedback request to Python backend for interview: ${interviewId}`);
