@@ -15,7 +15,7 @@ const generateToken = (userId) => {
 
 // REGISTER USER
 exports.register = async (req, res) => {
-  console.log("📝 Registration request received:", req.body);
+  console.log("Registration request received:", req.body);
 
   try {
     const { name, email, password } = req.body;
@@ -55,7 +55,7 @@ exports.register = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ REGISTER ERROR:", error);
+    console.error(" REGISTER ERROR:", error);
     console.error("Error details:", error.message);
     console.error("Stack trace:", error.stack);
 
@@ -66,9 +66,8 @@ exports.register = async (req, res) => {
   }
 };
 
-// LOGIN USER
 exports.login = async (req, res) => {
-  console.log("📝 Login request received:", req.body.email);
+  console.log("Login request received:", req.body.email);
 
   try {
     const { email, password } = req.body;
@@ -88,7 +87,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Compare password using callback
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
@@ -106,7 +104,7 @@ exports.login = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ LOGIN ERROR:", error);
+    console.error("LOGIN ERROR:", error);
     res.status(500).json({
       message: "Server error",
       error: error.message
@@ -127,7 +125,7 @@ exports.getProfile = async (req, res) => {
     
     res.json(user);
   } catch (error) {
-    console.error("❌ PROFILE ERROR:", error);
+    console.error(" PROFILE ERROR:", error);
     res.status(500).json({
       message: "Server error"
     });
@@ -165,19 +163,17 @@ exports.updateProfile = async (req, res) => {
       role: user.role
     });
   } catch (error) {
-    console.error("❌ UPDATE PROFILE ERROR:", error);
+    console.error(" UPDATE PROFILE ERROR:", error);
     res.status(500).json({
       message: "Server error"
     });
   }
 };
 
-// ============================================================
-// FORGOT PASSWORD
-// ============================================================
+
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
-  console.log("📝 Forgot password request for email:", email);
+  console.log(" Forgot password request for email:", email);
 
   try {
     if (!email) {
@@ -191,10 +187,10 @@ exports.forgotPassword = async (req, res) => {
       return res.status(404).json({ message: "No user found with that email address" });
     }
 
-    // Generate token
+  
     const resetToken = crypto.randomBytes(20).toString("hex");
 
-    // Set token hash and expire on user schema
+
     user.resetPasswordToken = crypto
       .createHash("sha256")
       .update(resetToken)
@@ -215,7 +211,7 @@ exports.forgotPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ FORGOT PASSWORD ERROR:", error);
+    console.error(" FORGOT PASSWORD ERROR:", error);
     res.status(500).json({
       message: "Server error",
       error: error.message
@@ -229,7 +225,7 @@ exports.forgotPassword = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
-  console.log("📝 Reset password request with token:", token);
+  console.log(" Reset password request with token:", token);
 
   try {
     if (!password) {
@@ -270,7 +266,7 @@ exports.resetPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ RESET PASSWORD ERROR:", error);
+    console.error(" RESET PASSWORD ERROR:", error);
     res.status(500).json({
       message: "Server error",
       error: error.message
